@@ -14,6 +14,7 @@ public class DashboardView extends JFrame {
     private TaskController taskController;
     private JTable taskTable;
     private JButton refreshButton;
+    private JButton locationButton;
 
     public DashboardView() {
         FirestoreService firestoreService = new FirestoreService();
@@ -25,6 +26,7 @@ public class DashboardView extends JFrame {
 
         taskTable = new JTable(); // You need to set a proper model
         refreshButton = new JButton("Refresh");
+        locationButton = new JButton("Manage Locations");
 
         refreshButton.addActionListener(new ActionListener() {
             @Override
@@ -37,9 +39,19 @@ public class DashboardView extends JFrame {
             }
         });
 
+        locationButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new LocationView().setVisible(true);
+            }
+        });
+
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(new JScrollPane(taskTable), BorderLayout.CENTER);
-        panel.add(refreshButton, BorderLayout.SOUTH);
+        JPanel southPanel = new JPanel();
+        southPanel.add(refreshButton);
+        southPanel.add(locationButton);
+        panel.add(southPanel, BorderLayout.SOUTH);
         add(panel);
 
         try {

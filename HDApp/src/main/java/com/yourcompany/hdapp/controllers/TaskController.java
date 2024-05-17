@@ -15,13 +15,13 @@ public class TaskController {
     }
 
     public List<Task> getTasks() throws Exception {
-        List<DocumentSnapshot> documents = firestoreService.getTasks();
+        List<DocumentSnapshot> documents = firestoreService.getTasks("tasks");
         return documents.stream()
                 .map(doc -> doc.toObject(Task.class))
                 .collect(Collectors.toList());
     }
 
     public void updateTaskStatus(String taskId, String status) throws Exception {
-        firestoreService.updateTaskStatus(taskId, status);
+        firestoreService.updateTaskStatus("tasks", taskId, status);
     }
 }
