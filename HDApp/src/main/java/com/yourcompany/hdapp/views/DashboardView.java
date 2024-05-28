@@ -1,6 +1,7 @@
 package com.yourcompany.hdapp.views;
 
 import com.yourcompany.hdapp.controllers.TaskController;
+import com.yourcompany.hdapp.controllers.AuthController;
 import com.yourcompany.hdapp.models.Task;
 import com.yourcompany.hdapp.services.FirestoreService;
 
@@ -12,13 +13,16 @@ import java.util.List;
 
 public class DashboardView extends JFrame {
     private TaskController taskController;
+    private AuthController authController;
     private JTable taskTable;
     private JButton refreshButton;
-    private JButton locationButton;
+    private String username;
 
-    public DashboardView() {
+    public DashboardView(String username) {
+        this.username = username;
         FirestoreService firestoreService = new FirestoreService();
         taskController = new TaskController(firestoreService);
+        authController = new AuthController(firestoreService);
 
         setTitle("HD App Dashboard");
         setSize(800, 600);
@@ -26,7 +30,6 @@ public class DashboardView extends JFrame {
 
         taskTable = new JTable(); // You need to set a proper model
         refreshButton = new JButton("Refresh");
-        locationButton = new JButton("Manage Locations");
 
         refreshButton.addActionListener(new ActionListener() {
             @Override
@@ -39,19 +42,9 @@ public class DashboardView extends JFrame {
             }
         });
 
-        locationButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new LocationView().setVisible(true);
-            }
-        });
-
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(new JScrollPane(taskTable), BorderLayout.CENTER);
-        JPanel southPanel = new JPanel();
-        southPanel.add(refreshButton);
-        southPanel.add(locationButton);
-        panel.add(southPanel, BorderLayout.SOUTH);
+        panel.add(refreshButton, BorderLayout.SOUTH);
         add(panel);
 
         try {
