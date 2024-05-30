@@ -1,48 +1,45 @@
 package com.yourcompany.hdapp.views;
 
 import com.yourcompany.hdapp.controllers.AuthController;
-import com.yourcompany.hdapp.services.FirestoreService;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class LoginView extends JFrame {
-    private JTextField userField;
-    private JButton loginButton;
+public class LoginView extends JPanel {
     private AuthController authController;
+    private LoginListener loginListener;
 
-    public LoginView() {
-        FirestoreService firestoreService = new FirestoreService();
-        authController = new AuthController(firestoreService);
+    public LoginView(LoginListener loginListener) {
+        this.loginListener = loginListener;
+        authController = new AuthController();
 
-        setTitle("HD App Login");
-        setSize(300, 200);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        userField = new JTextField(15);
-        loginButton = new JButton("Login");
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-        JPanel panel = new JPanel();
-        panel.add(new JLabel("Username:"));
-        panel.add(userField);
-        panel.add(loginButton);
-        add(panel);
+        JTextField usernameField = new JTextField(15);
+        JButton loginButton = new JButton("Login");
 
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String username = userField.getText();
-                try {
-                    if (authController.authenticate(username)) {
-                        new DashboardView(username).setVisible(true);
-                        dispose();
-                    } else {
-                        JOptionPane.showMessageDialog(null, "Invalid username");
+                String username = usernameField.getText().trim();
+                if (authController.login(username)) {
+                    JOptionPane.showMessageDialog(null, "Login successful");
+                    if (loginListener != null) {
+                        loginListener.onLoginSuccess();
                     }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Login failed: Invalid username");
                 }
             }
         });
+
+        add(new JLabel("Username:"));
+        add(usernameField);
+        add(loginButton);
+    }
+
+    public interface LoginListener {
+        void onLoginSuccess();
     }
 }
