@@ -1,5 +1,6 @@
 package com.yourcompany.hdapp;
 
+import com.yourcompany.hdapp.controllers.AuthController;
 import com.yourcompany.hdapp.views.*;
 
 import javax.swing.*;
@@ -8,6 +9,7 @@ import java.awt.*;
 public class MainFrame extends JFrame implements LoginView.LoginListener {
     private CardLayout cardLayout;
     private JPanel mainPanel;
+    private AuthController authController;
     private static final String LOGIN_VIEW = "LoginView";
     private static final String MAIN_VIEW = "MainView";
 
@@ -16,6 +18,8 @@ public class MainFrame extends JFrame implements LoginView.LoginListener {
         setSize(1024, 768);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); // Center the frame
+
+        authController = new AuthController();
 
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
@@ -64,6 +68,7 @@ public class MainFrame extends JFrame implements LoginView.LoginListener {
     private void logout() {
         int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Logout Confirmation", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
+            authController.logout();
             showLoginView();
         }
     }
