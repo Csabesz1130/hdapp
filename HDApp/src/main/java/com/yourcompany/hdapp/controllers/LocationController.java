@@ -38,4 +38,8 @@ public class LocationController {
             updateLocationStatus(id, status);
         }
     }
+
+    public void importLocationsFromSheet(String sheetId, String range) throws Exception {
+        // Implement the logic to import locations from Google Sheets using the sheetId and range
+    }
 }

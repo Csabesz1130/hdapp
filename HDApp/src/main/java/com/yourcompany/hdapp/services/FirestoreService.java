@@ -15,14 +15,22 @@ public class FirestoreService {
         this.firestore = firestore;
     }
 
-    public List<Location> getLocations() throws InterruptedException, ExecutionException {
-        List<Location> locations = new ArrayList<>();
-        ApiFuture<QuerySnapshot> future = firestore.collection("locations").get();
-        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
-        for (QueryDocumentSnapshot document : documents) {
-            Location location = document.toObject(Location.class);
-            locations.add(location);
-        }
-        return locations;
+    public List<DocumentSnapshot> getTasks(String collection) throws InterruptedException, ExecutionException {
+        List<DocumentSnapshot> documents = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = firestore.collection(collection).get();
+        documents.addAll(future.get().getDocuments());
+        return documents;
+    }
+
+    public void addLocation(String collection, Location location) throws InterruptedException, ExecutionException {
+        firestore.collection(collection).add(location).get();
+    }
+
+    public void deleteLocation(String collection, String documentId) throws InterruptedException, ExecutionException {
+        firestore.collection(collection).document(documentId).delete().get();
+    }
+
+    public void updateTaskStatus(String collection, String documentId, String status) throws InterruptedException, ExecutionException {
+        firestore.collection(collection).document(documentId).update("status", status).get();
     }
 }
