@@ -1,0 +1,4 @@
+com\yourcompany\hdapp\services\GoogleSheetsService.class
+com\yourcompany\hdapp\views\DashboardView.class
+com\yourcompany\hdapp\controllers\AuthController.class
+com\yourcompany\hdapp\App.class

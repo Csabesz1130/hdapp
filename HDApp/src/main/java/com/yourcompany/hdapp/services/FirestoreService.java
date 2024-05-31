@@ -2,38 +2,27 @@ package com.yourcompany.hdapp.services;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
-import com.google.firebase.cloud.FirestoreClient;
 import com.yourcompany.hdapp.models.Location;
-import com.yourcompany.hdapp.models.Task;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class FirestoreService {
-    private Firestore db;
+    private Firestore firestore;
 
-    public FirestoreService() {
-        this.db = FirestoreClient.getFirestore();
+    public FirestoreService(Firestore firestore) {
+        this.firestore = firestore;
     }
 
-    public List<DocumentSnapshot> getTasks(String collection) throws Exception {
-        ApiFuture<QuerySnapshot> future = db.collection(collection).get();
-        return future.get().getDocuments();
-    }
-
-    public void updateTaskStatus(String collection, String taskId, String status) throws Exception {
-        DocumentReference docRef = db.collection(collection).document(taskId);
-        ApiFuture<WriteResult> writeResult = docRef.update("status", status);
-        System.out.println("Update time : " + writeResult.get().getUpdateTime());
-    }
-
-    public void addLocation(String collection, Location location) throws Exception {
-        ApiFuture<DocumentReference> future = db.collection(collection).add(location);
-        System.out.println("Added document with ID: " + future.get().getId());
-    }
-
-    public void deleteLocation(String collection, String locationId) throws Exception {
-        DocumentReference docRef = db.collection(collection).document(locationId);
-        ApiFuture<WriteResult> writeResult = docRef.delete();
-        System.out.println("Delete time : " + writeResult.get().getUpdateTime());
+    public List<Location> getLocations() throws InterruptedException, ExecutionException {
+        List<Location> locations = new ArrayList<>();
+        ApiFuture<QuerySnapshot> future = firestore.collection("locations").get();
+        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+        for (QueryDocumentSnapshot document : documents) {
+            Location location = document.toObject(Location.class);
+            locations.add(location);
+        }
+        return locations;
     }
 }

@@ -5,33 +5,33 @@ import java.util.Set;
 
 public class AuthController {
     private Set<String> validUsernames;
-    private String currentUser;
+    private String loggedInUser;
 
     public AuthController() {
         validUsernames = new HashSet<>();
         validUsernames.add("borisz");
         validUsernames.add("davidartur");
         // Add more usernames as needed
-        currentUser = null;
+        loggedInUser = null;
     }
 
     public boolean login(String username) {
         if (validUsernames.contains(username)) {
-            currentUser = username;
+            loggedInUser = username;
             return true;
         }
         return false;
     }
 
     public void logout() {
-        currentUser = null;
+        loggedInUser = null;
+    }
+
+    public String getLoggedInUser() {
+        return loggedInUser;
     }
 
     public boolean isLoggedIn() {
-        return currentUser != null;
-    }
-
-    public String getCurrentUser() {
-        return currentUser;
+        return loggedInUser != null;
     }
 }
