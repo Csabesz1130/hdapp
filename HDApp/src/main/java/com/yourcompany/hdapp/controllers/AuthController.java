@@ -1,11 +1,15 @@
 package com.yourcompany.hdapp.controllers;
 
+import com.yourcompany.hdapp.services.FirestoreService;
+
 import java.util.HashSet;
 import java.util.Set;
 
 public class AuthController {
     private Set<String> validUsernames;
     private String loggedInUser;
+    private FirestoreService firestoreService;
+
 
     public AuthController() {
         validUsernames = new HashSet<>();
@@ -13,6 +17,10 @@ public class AuthController {
         validUsernames.add("davidartur");
         // Add more usernames as needed
         loggedInUser = null;
+    }
+
+    public AuthController(FirestoreService firestoreService) {
+        this.firestoreService = firestoreService;
     }
 
     public boolean login(String username) {
