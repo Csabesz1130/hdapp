@@ -4,6 +4,7 @@ import com.yourcompany.hdapp.controllers.AuthController;
 import com.yourcompany.hdapp.controllers.TaskController;
 import com.yourcompany.hdapp.models.Task;
 import com.yourcompany.hdapp.views.TaskView;
+import com.yourcompany.hdapp.services.FirestoreService;
 
 import javax.swing.*;
 
@@ -12,8 +13,9 @@ public class MainFrame extends JFrame {
     private AuthController authController;
 
     public MainFrame() {
+        FirestoreService firestoreService = new FirestoreService(); // Initialize FirestoreService
         this.authController = new AuthController();
-        this.taskController = new TaskController();
+        this.taskController = new TaskController(firestoreService);
 
         Task task = new Task(); // Assuming a Task object is needed
 

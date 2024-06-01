@@ -2,58 +2,54 @@ package com.yourcompany.hdapp.views;
 
 import com.yourcompany.hdapp.controllers.LocationController;
 import com.yourcompany.hdapp.models.Location;
-import com.yourcompany.hdapp.services.FirestoreService;
-import com.yourcompany.hdapp.services.ExcelService;
 import com.yourcompany.hdapp.services.GoogleSheetsService;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class LocationManagementPanel extends JPanel {
     private LocationController locationController;
-    private JTextField nameFilterField;
-    private JTextField statusFilterField;
-    private JPanel locationPanel;
-    private JScrollPane locationScrollPane;
+    private JTable locationTable;
+    public LocationTableModel locationTableModel;
 
-    public LocationManagementPanel() {
-        FirestoreService firestoreService = new FirestoreService();
-        ExcelService excelService = new ExcelService();
-        GoogleSheetsService googleSheetsService = new GoogleSheetsService();
-        locationController = new LocationController(firestoreService, googleSheetsService, excelService);
+    public LocationManagementPanel(LocationController locationController) {
+        this.locationController = locationController;
+        initializeUI();
+    }
 
+    private void initializeUI() {
         setLayout(new BorderLayout());
 
-        add(createFilterPanel(), BorderLayout.NORTH);
-        locationScrollPane = createLocationPanel();
-        add(locationScrollPane, BorderLayout.CENTER);
+        JPanel filterPanel = createFilterPanel();
+        add(filterPanel, BorderLayout.NORTH);
+
+        locationTableModel = new LocationTableModel();
+        locationTable = new JTable(locationTableModel);
+
+        JScrollPane scrollPane = new JScrollPane(locationTable);
+        add(scrollPane, BorderLayout.CENTER);
+
+        loadLocations();
     }
 
     private JPanel createFilterPanel() {
         JPanel filterPanel = new JPanel(new FlowLayout());
 
-        nameFilterField = new JTextField(15);
-        statusFilterField = new JTextField(15);
+        JTextField nameFilterField = new JTextField(15);
+        JTextField statusFilterField = new JTextField(15);
         JButton applyFilterButton = new JButton("Apply Filter");
 
         applyFilterButton.addActionListener(e -> {
-            try {
-                updateLocationTable();
-            } catch (Exception ex) {
-                showErrorDialog("Error applying filter: " + ex.getMessage());
-                ex.printStackTrace();
-            }
+            // Add filter logic here
         });
 
         JButton importButton = new JButton("Import from Google Sheets");
         importButton.addActionListener(e -> {
             try {
                 importFromGoogleSheets();
-                updateLocationTable();
+                loadLocations();
             } catch (Exception ex) {
-                showErrorDialog("Error importing data: " + ex.getMessage());
                 ex.printStackTrace();
             }
         });
@@ -68,17 +64,10 @@ public class LocationManagementPanel extends JPanel {
         return filterPanel;
     }
 
-    private JScrollPane createLocationPanel() {
-        locationPanel = new JPanel(new GridLayout(0, 3, 10, 10)); // 3 cards per row
-        loadData();
-        return new JScrollPane(locationPanel);
-    }
-
-    private void loadData() {
+    private void loadLocations() {
         SwingWorker<List<Location>, Void> worker = new SwingWorker<List<Location>, Void>() {
             @Override
             protected List<Location> doInBackground() throws Exception {
-                showProgressIndicator(true);
                 return locationController.getLocations();
             }
 
@@ -86,153 +75,13 @@ public class LocationManagementPanel extends JPanel {
             protected void done() {
                 try {
                     List<Location> locations = get();
-                    locationPanel.removeAll();
-                    for (Location location : locations) {
-                        locationPanel.add(createLocationCard(location));
-                    }
-                    locationPanel.revalidate();
-                    locationPanel.repaint();
+                    locationTableModel.setLocations(locations);
                 } catch (Exception e) {
-                    showErrorDialog("Error loading data: " + e.getMessage());
-                    e.printStackTrace();
-                } finally {
-                    showProgressIndicator(false);
+                    showErrorDialog("Error loading locations: " + e.getMessage());
                 }
             }
         };
         worker.execute();
-    }
-
-    private JPanel createLocationCard(Location location) {
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBorder(BorderFactory.createLineBorder(Color.GRAY));
-        card.setBackground(Color.WHITE);
-        card.setPreferredSize(new Dimension(200, 150));
-
-        JLabel nameLabel = new JLabel(location.getName());
-        nameLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        card.add(nameLabel, BorderLayout.NORTH);
-
-        JLabel statusLabel = new JLabel("Status: " + location.getStatus());
-        statusLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        card.add(statusLabel, BorderLayout.CENTER);
-
-        JPanel buttonPanel = new JPanel();
-        JButton editButton = new JButton("Edit");
-        JButton deleteButton = new JButton("Delete");
-
-        editButton.addActionListener(e -> editLocation(location));
-
-        deleteButton.addActionListener(e -> {
-            int confirm = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this location?", "Delete Confirmation", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-                    @Override
-                    protected Void doInBackground() throws Exception {
-                        showProgressIndicator(true);
-                        locationController.deleteLocation(location.getId());
-                        return null;
-                    }
-
-                    @Override
-                    protected void done() {
-                        try {
-                            refreshLocationPanel();
-                        } catch (Exception e) {
-                            showErrorDialog("Error refreshing data: " + e.getMessage());
-                            e.printStackTrace();
-                        } finally {
-                            showProgressIndicator(false);
-                        }
-                    }
-                };
-                worker.execute();
-            }
-        });
-
-        buttonPanel.add(editButton);
-        buttonPanel.add(deleteButton);
-        card.add(buttonPanel, BorderLayout.SOUTH);
-
-        return card;
-    }
-
-    private void editLocation(Location location) {
-        JTextField nameField = new JTextField(location.getName());
-        JTextField statusField = new JTextField(location.getStatus());
-        JPanel panel = new JPanel(new GridLayout(0, 1));
-        panel.add(new JLabel("Name:"));
-        panel.add(nameField);
-        panel.add(new JLabel("Status:"));
-        panel.add(statusField);
-
-        int result = JOptionPane.showConfirmDialog(null, panel, "Edit Location", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-        if (result == JOptionPane.OK_OPTION) {
-            SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-                @Override
-                protected Void doInBackground() throws Exception {
-                    showProgressIndicator(true);
-                    location.setName(nameField.getText());
-                    location.setStatus(statusField.getText());
-                    locationController.updateLocationStatus(location.getId(), location.getStatus());
-                    return null;
-                }
-
-                @Override
-                protected void done() {
-                    try {
-                        refreshLocationPanel();
-                    } catch (Exception e) {
-                        showErrorDialog("Error refreshing data: " + e.getMessage());
-                        e.printStackTrace();
-                    } finally {
-                        showProgressIndicator(false);
-                    }
-                }
-            };
-            worker.execute();
-        }
-    }
-
-    private void refreshLocationPanel() {
-        locationPanel.removeAll();
-        loadData();
-        revalidate();
-        repaint();
-    }
-
-    private void updateLocationTable() throws Exception {
-        List<Location> locations = locationController.getLocations();
-        String nameFilter = nameFilterField.getText().toLowerCase();
-        String statusFilter = statusFilterField.getText().toLowerCase();
-
-        List<Location> filteredLocations = locations.stream()
-                .filter(location -> location.getName().toLowerCase().contains(nameFilter))
-                .filter(location -> location.getStatus().toLowerCase().contains(statusFilter))
-                .collect(Collectors.toList());
-
-        locationPanel.removeAll();
-        for (Location location : filteredLocations) {
-            locationPanel.add(createLocationCard(location));
-        }
-        locationPanel.revalidate();
-        locationPanel.repaint();
-    }
-
-    private void showProgressIndicator(boolean show) {
-        JDialog progressDialog = new JDialog((Frame) null, "Loading", true);
-        progressDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        progressDialog.setSize(200, 100);
-        progressDialog.setLocationRelativeTo(this);
-        JProgressBar progressBar = new JProgressBar();
-        progressBar.setIndeterminate(true);
-        progressDialog.add(BorderLayout.CENTER, progressBar);
-        if (show) {
-            SwingUtilities.invokeLater(() -> progressDialog.setVisible(true));
-        } else {
-            SwingUtilities.invokeLater(() -> progressDialog.dispose());
-        }
     }
 
     private void importFromGoogleSheets() {
@@ -243,11 +92,10 @@ public class LocationManagementPanel extends JPanel {
                 @Override
                 protected List<List<Object>> doInBackground() throws Exception {
                     try {
-                        showProgressIndicator(true);
-                        return locationController.importLocationsFromSheet(spreadsheetId, range);
+                        GoogleSheetsService googleSheetsService = new GoogleSheetsService();
+                        return googleSheetsService.getSheetData(spreadsheetId, range);
                     } catch (Exception e) {
                         showErrorDialog("Error importing data from Google Sheets: " + e.getMessage());
-                        e.printStackTrace();
                         return null;
                     }
                 }
@@ -267,12 +115,10 @@ public class LocationManagementPanel extends JPanel {
                                     locationController.addLocation(location);
                                 }
                             }
+                            loadLocations();
                         }
                     } catch (Exception e) {
                         showErrorDialog("Error processing imported data: " + e.getMessage());
-                        e.printStackTrace();
-                    } finally {
-                        showProgressIndicator(false);
                     }
                 }
             };
