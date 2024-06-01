@@ -3,8 +3,8 @@ package com.yourcompany.hdapp;
 import com.yourcompany.hdapp.controllers.AuthController;
 import com.yourcompany.hdapp.controllers.TaskController;
 import com.yourcompany.hdapp.models.Task;
-import com.yourcompany.hdapp.services.FirestoreService;
 import com.yourcompany.hdapp.views.TaskView;
+import com.yourcompany.hdapp.services.FirestoreService;
 
 import javax.swing.*;
 
