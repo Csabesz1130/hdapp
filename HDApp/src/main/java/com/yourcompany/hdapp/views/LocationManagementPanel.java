@@ -5,13 +5,15 @@ import com.yourcompany.hdapp.models.Location;
 import com.yourcompany.hdapp.services.GoogleSheetsService;
 
 import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class LocationManagementPanel extends JPanel {
-    private LocationController locationController;
+    private final LocationController locationController;
     private JTable locationTable;
-    public LocationTableModel locationTableModel;
+    private LocationTableModel locationTableModel;
 
     public LocationManagementPanel(LocationController locationController) {
         this.locationController = locationController;
@@ -50,7 +52,7 @@ public class LocationManagementPanel extends JPanel {
                 importFromGoogleSheets();
                 loadLocations();
             } catch (Exception ex) {
-                ex.printStackTrace();
+                showErrorDialog("Error importing data from Google Sheets: " + ex.getMessage());
             }
         });
 
@@ -91,13 +93,8 @@ public class LocationManagementPanel extends JPanel {
             SwingWorker<List<List<Object>>, Void> worker = new SwingWorker<List<List<Object>>, Void>() {
                 @Override
                 protected List<List<Object>> doInBackground() throws Exception {
-                    try {
-                        GoogleSheetsService googleSheetsService = new GoogleSheetsService();
-                        return googleSheetsService.getSheetData(spreadsheetId, range);
-                    } catch (Exception e) {
-                        showErrorDialog("Error importing data from Google Sheets: " + e.getMessage());
-                        return null;
-                    }
+                    GoogleSheetsService googleSheetsService = new GoogleSheetsService();
+                    return googleSheetsService.getSheetData(spreadsheetId, range);
                 }
 
                 @Override
@@ -128,5 +125,48 @@ public class LocationManagementPanel extends JPanel {
 
     private void showErrorDialog(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    // LocationTableModel as an inner class for simplicity
+    private static class LocationTableModel extends AbstractTableModel {
+        private List<Location> locations;
+        private final String[] columnNames = {"Name", "Status"};
+
+        public LocationTableModel() {
+            this.locations = new ArrayList<>();
+        }
+
+        public void setLocations(List<Location> locations) {
+            this.locations = locations;
+            fireTableDataChanged();
+        }
+
+        @Override
+        public int getRowCount() {
+            return locations.size();
+        }
+
+        @Override
+        public int getColumnCount() {
+            return columnNames.length;
+        }
+
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            Location location = locations.get(rowIndex);
+            switch (columnIndex) {
+                case 0:
+                    return location.getName();
+                case 1:
+                    return location.getStatus();
+                default:
+                    return null;
+            }
+        }
+
+        @Override
+        public String getColumnName(int column) {
+            return columnNames[column];
+        }
     }
 }
